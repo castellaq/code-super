@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 프로필 페이지</title>
+    <style>
+        /* 전체 페이지 스타일 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 프로필 카드 */
+        .profile-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 프로필 이미지 */
+        .profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid #667eea;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        /* 이름 */
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        /* 소개 */
+        .bio {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* 정보 섹션 */
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .info-section h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-section li {
+            color: #555;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-section li:last-child {
+            border-bottom: none;
+        }
+
+        .info-section li::before {
+            content: "✨ ";
+            margin-right: 8px;
+        }
+
+        /* 소셜 링크 */
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .social-links a {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: bold;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 푸터 */
+        .footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-card">
+        <!-- 프로필 이미지 (이모지로 대체, 원하면 실제 이미지로 변경 가능) -->
+        <div class="profile-image">
+            👤
+        </div>
+
+        <!-- 이름 (여기를 수정하세요!) -->
+        <h1>당신의 이름</h1>
+
+        <!-- 자기소개 (여기를 수정하세요!) -->
+        <p class="bio">
+            안녕하세요! 코딩을 시작한 초보 개발자입니다.
+            <br>매일 조금씩 성장하는 중입니다! 🌱
+        </p>
+
+        <!-- 관심사 섹션 -->
+        <div class="info-section">
+            <h2>🎯 관심사</h2>
+            <ul>
+                <li>웹 개발 배우기</li>
+                <li>GitHub로 프로젝트 관리</li>
+                <li>멋진 웹사이트 만들기</li>
+            </ul>
+        </div>
+
+        <!-- 목표 섹션 -->
+        <div class="info-section">
+            <h2>🚀 목표</h2>
+            <ul>
+                <li>HTML/CSS 마스터하기</li>
+                <li>JavaScript 기초 다지기</li>
+                <li>나만의 프로젝트 만들기</li>
+            </ul>
+        </div>
+
+        <!-- 소셜 링크 (여기를 수정하세요!) -->
+        <div class="social-links">
+            <a href="https://github.com" target="_blank">GitHub</a>
+            <a href="mailto:your.email@example.com">Email</a>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="footer">
+            Made with ❤️ | 2024
+        </div>
+    </div>
+</body>
+</html>
