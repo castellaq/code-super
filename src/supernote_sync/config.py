@@ -36,6 +36,14 @@ class Config:
             'sync_interval': 5,
             'max_file_size_mb': 100,
         },
+        'cloud': {
+            'enabled': False,
+            'source_type': 'cloud',  # 'device' or 'cloud'
+            'cloud_path': '/Note',
+            'convert_to_pdf': False,
+            'email': '',
+            'auto_download': True,
+        },
         'logging': {
             'level': 'INFO',
             'log_file': 'logs/supernote_sync.log',
@@ -70,10 +78,13 @@ class Config:
 
     def _merge_with_defaults(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """사용자 설정과 기본 설정 병합"""
-        merged = self.DEFAULT_CONFIG.copy()
+        import copy
+        merged = copy.deepcopy(self.DEFAULT_CONFIG)
 
         if 'sync' in config:
             merged['sync'].update(config['sync'])
+        if 'cloud' in config:
+            merged['cloud'].update(config['cloud'])
         if 'logging' in config:
             merged['logging'].update(config['logging'])
 

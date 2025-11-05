@@ -37,6 +37,25 @@ sync:
   # 최대 파일 크기 (MB 단위, null이면 제한 없음)
   max_file_size_mb: 100
 
+cloud:
+  # 슈퍼노트 클라우드 기능 활성화
+  enabled: false
+
+  # 소스 타입: 'device' (USB 장치) 또는 'cloud' (클라우드)
+  source_type: device
+
+  # 클라우드 동기화 경로
+  cloud_path: /Note
+
+  # 노트 파일을 PDF로 변환하여 다운로드
+  convert_to_pdf: false
+
+  # 슈퍼노트 클라우드 이메일 (cloud-login 명령 실행 후 자동 저장됨)
+  email: ''
+
+  # 자동 다운로드 활성화
+  auto_download: true
+
 logging:
   # 로그 레벨: DEBUG, INFO, WARNING, ERROR, CRITICAL
   level: INFO

@@ -6,6 +6,7 @@
 
 - **실시간 파일 감지**: 슈퍼노트 장치의 파일 변경사항을 실시간으로 감지
 - **자동 동기화**: 변경된 파일을 자동으로 백업 위치에 복사
+- **슈퍼노트 클라우드 연동**: 클라우드에서 직접 파일 다운로드 및 동기화
 - **파일 필터링**: 특정 확장자만 동기화하도록 설정 가능
 - **제외 패턴**: 숨김 파일, 임시 파일 등 제외 가능
 - **로깅 시스템**: 모든 동기화 작업을 추적하고 기록
@@ -29,7 +30,7 @@ pip install -r requirements.txt
 또는 개별 설치:
 
 ```bash
-pip install watchdog PyYAML colorama
+pip install watchdog PyYAML colorama sncloud
 ```
 
 ### 3. 설정 파일 생성
@@ -103,6 +104,39 @@ python main.py start --verbose
 python main.py start --config /path/to/config.yaml
 ```
 
+### 슈퍼노트 클라우드 사용
+
+**1. 클라우드 로그인**
+
+```bash
+python main.py cloud-login
+```
+
+이메일과 비밀번호를 입력하면 인증 토큰이 저장됩니다.
+
+**2. 클라우드 파일 목록 확인**
+
+```bash
+python main.py cloud-list
+```
+
+특정 경로 조회:
+```bash
+python main.py cloud-list --cloud-path /Note/Work
+```
+
+**3. 클라우드에서 로컬로 동기화**
+
+```bash
+python main.py cloud-sync
+```
+
+**4. 클라우드 계정 정보 확인**
+
+```bash
+python main.py cloud-info
+```
+
 ## 설정 옵션
 
 ### 동기화 설정 (sync)
@@ -115,6 +149,15 @@ python main.py start --config /path/to/config.yaml
 - `auto_sync`: 자동 동기화 활성화 여부
 - `sync_interval`: 동기화 간격 (초 단위)
 - `max_file_size_mb`: 최대 파일 크기 제한 (MB 단위)
+
+### 클라우드 설정 (cloud)
+
+- `enabled`: 클라우드 기능 활성화 여부
+- `source_type`: 소스 타입 (`device` 또는 `cloud`)
+- `cloud_path`: 클라우드 동기화 경로
+- `convert_to_pdf`: 노트 파일을 PDF로 변환하여 다운로드
+- `email`: 슈퍼노트 클라우드 이메일 (로그인 후 자동 저장)
+- `auto_download`: 자동 다운로드 활성화
 
 ### 로깅 설정 (logging)
 
@@ -131,7 +174,8 @@ code-super/
 │       ├── sync.py           # 동기화 로직
 │       ├── config.py         # 설정 관리
 │       ├── watcher.py        # 파일 감시
-│       └── logger.py         # 로깅 시스템
+│       ├── logger.py         # 로깅 시스템
+│       └── cloud.py          # 클라우드 연동
 ├── main.py                   # CLI 진입점
 ├── config.yaml               # 설정 파일
 ├── config.yaml.example       # 설정 파일 예시

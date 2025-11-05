@@ -12,7 +12,7 @@ from pathlib import Path
 # 프로젝트 루트를 Python 경로에 추가
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
-from supernote_sync import SupernoteSync, Config, Logger
+from supernote_sync import SupernoteSync, Config, Logger, SupernoteCloud
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -28,6 +28,10 @@ def create_parser() -> argparse.ArgumentParser:
   %(prog)s init                     # 설정 파일 초기화
   %(prog)s stats                    # 동기화 통계 표시
 
+  %(prog)s cloud-login              # 슈퍼노트 클라우드 로그인
+  %(prog)s cloud-list               # 클라우드 파일 목록 확인
+  %(prog)s cloud-sync               # 클라우드에서 로컬로 동기화
+
 설정 파일:
   기본 위치: config.yaml
   사용자 지정: --config 옵션 사용
@@ -36,7 +40,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         'command',
-        choices=['start', 'sync', 'config', 'init', 'stats'],
+        choices=['start', 'sync', 'config', 'init', 'stats', 'cloud-login', 'cloud-list', 'cloud-sync', 'cloud-info'],
         help='실행할 명령'
     )
 
@@ -55,7 +59,12 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--version',
         action='version',
-        version='Supernote Auto Sync v1.0.0'
+        version='Supernote Auto Sync v1.1.0'
+    )
+
+    parser.add_argument(
+        '--cloud-path',
+        help='클라우드 경로 (cloud-list, cloud-sync 명령에서 사용)'
     )
 
     return parser
@@ -133,6 +142,126 @@ def cmd_stats(config: Config, logger: Logger):
     print()
 
 
+def cmd_cloud_login(config: Config, logger: Logger):
+    """슈퍼노트 클라우드 로그인"""
+    import getpass
+
+    try:
+        print("\n=== 슈퍼노트 클라우드 로그인 ===\n")
+
+        email = input("이메일: ")
+        password = getpass.getpass("비밀번호: ")
+
+        logger.info("로그인 중...")
+        cloud = SupernoteCloud()
+
+        if cloud.login(email, password):
+            logger.info("로그인 성공!")
+
+            # 설정 파일에 이메일 저장
+            config.set('cloud.email', email)
+            config.set('cloud.enabled', True)
+            config.save_config()
+
+            logger.info(f"계정 정보가 저장되었습니다: {email}")
+        else:
+            logger.error("로그인 실패")
+
+    except Exception as e:
+        logger.error(f"로그인 오류: {e}")
+
+
+def cmd_cloud_list(config: Config, logger: Logger):
+    """클라우드 파일 목록 조회"""
+    try:
+        cloud_path = config.get('cloud.cloud_path', '/')
+
+        # 명령줄 인자로 경로가 제공된 경우
+        if hasattr(sys, 'argv'):
+            for i, arg in enumerate(sys.argv):
+                if arg == '--cloud-path' and i + 1 < len(sys.argv):
+                    cloud_path = sys.argv[i + 1]
+
+        logger.info(f"클라우드 경로 '{cloud_path}' 조회 중...")
+
+        email = config.get('cloud.email')
+        if not email:
+            logger.error("로그인이 필요합니다. 'cloud-login' 명령을 먼저 실행하세요.")
+            return
+
+        cloud = SupernoteCloud()
+        # sncloud는 자동으로 저장된 토큰을 사용합니다
+        cloud.is_authenticated = True
+
+        files = cloud.list_files(cloud_path)
+
+        print(f"\n=== 클라우드 파일 목록: {cloud_path} ===\n")
+
+        if not files:
+            print("파일이 없습니다.")
+        else:
+            for item in files:
+                name = item.get('name', item.get('fileName', '알 수 없음'))
+                item_type = item.get('type', item.get('fileType', '파일'))
+                size = item.get('size', 0)
+
+                type_icon = "📁" if item_type in ['folder', 'directory'] else "📄"
+                size_str = f"{size / 1024:.1f} KB" if size > 0 else ""
+
+                print(f"{type_icon} {name:<40} {size_str}")
+
+        print()
+
+    except Exception as e:
+        logger.error(f"파일 목록 조회 실패: {e}")
+
+
+def cmd_cloud_sync(config: Config, logger: Logger):
+    """클라우드에서 로컬로 동기화"""
+    try:
+        cloud_path = config.get('cloud.cloud_path', '/')
+        local_path = config.get('sync.destination_path')
+
+        logger.info(f"클라우드 동기화 시작: {cloud_path} -> {local_path}")
+
+        email = config.get('cloud.email')
+        if not email:
+            logger.error("로그인이 필요합니다. 'cloud-login' 명령을 먼저 실행하세요.")
+            return
+
+        cloud = SupernoteCloud()
+        cloud.is_authenticated = True
+
+        sync_count = cloud.sync_from_cloud(cloud_path, local_path, recursive=True)
+
+        logger.info(f"동기화 완료: {sync_count}개 파일")
+
+    except Exception as e:
+        logger.error(f"클라우드 동기화 실패: {e}")
+
+
+def cmd_cloud_info(config: Config, logger: Logger):
+    """클라우드 계정 정보 표시"""
+    try:
+        cloud = SupernoteCloud()
+        info = cloud.get_account_info()
+
+        print("\n=== 클라우드 계정 정보 ===\n")
+        print(f"이메일:              {info.get('email', '없음')}")
+        print(f"인증 상태:           {'인증됨' if info.get('is_authenticated') else '미인증'}")
+
+        if info.get('last_login'):
+            print(f"마지막 로그인:       {info.get('last_login')}")
+
+        print(f"\n클라우드 활성화:     {'예' if config.get('cloud.enabled') else '아니오'}")
+        print(f"클라우드 경로:       {config.get('cloud.cloud_path', '/')}")
+        print(f"PDF 변환:            {'예' if config.get('cloud.convert_to_pdf') else '아니오'}")
+        print()
+
+    except Exception as e:
+        logger.error(f"계정 정보 조회 실패: {e}")
+
+
 def main():
     """메인 함수"""
     parser = create_parser()
@@ -155,6 +284,10 @@ def main():
         'config': cmd_config,
         'init': cmd_init,
         'stats': cmd_stats,
+        'cloud-login': cmd_cloud_login,
+        'cloud-list': cmd_cloud_list,
+        'cloud-sync': cmd_cloud_sync,
+        'cloud-info': cmd_cloud_info,
     }
 
     try:
