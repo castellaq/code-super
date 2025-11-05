@@ -171,27 +171,17 @@ def cmd_cloud_login(config: Config, logger: Logger):
         logger.error(f"로그인 오류: {e}")
 
 
-def cmd_cloud_list(config: Config, logger: Logger):
+def cmd_cloud_list(config: Config, logger: Logger, args):
     """클라우드 파일 목록 조회"""
     try:
-        cloud_path = config.get('cloud.cloud_path', '/')
-
-        # 명령줄 인자로 경로가 제공된 경우
-        if hasattr(sys, 'argv'):
-            for i, arg in enumerate(sys.argv):
-                if arg == '--cloud-path' and i + 1 < len(sys.argv):
-                    cloud_path = sys.argv[i + 1]
+        # 명령줄 인자 우선, 없으면 설정 파일 사용
+        cloud_path = args.cloud_path if hasattr(args, 'cloud_path') and args.cloud_path else config.get('cloud.cloud_path', '/')
 
         logger.info(f"클라우드 경로 '{cloud_path}' 조회 중...")
 
-        email = config.get('cloud.email')
-        if not email:
-            logger.error("로그인이 필요합니다. 'cloud-login' 명령을 먼저 실행하세요.")
-            return
-
+        # sncloud는 자동으로 ~/.config/sncloud/config.json의 토큰 사용
         cloud = SupernoteCloud()
-        # sncloud는 자동으로 저장된 토큰을 사용합니다
-        cloud.is_authenticated = True
+        cloud.is_authenticated = True  # sncloud가 내부적으로 인증 처리
 
         files = cloud.list_files(cloud_path)
 
@@ -214,21 +204,20 @@ def cmd_cloud_list(config: Config, logger: Logger):
 
     except Exception as e:
         logger.error(f"파일 목록 조회 실패: {e}")
+        if 'verbose' in dir(args) and args.verbose:
+            import traceback
+            traceback.print_exc()
 
 
-def cmd_cloud_sync(config: Config, logger: Logger):
+def cmd_cloud_sync(config: Config, logger: Logger, args):
     """클라우드에서 로컬로 동기화"""
     try:
-        cloud_path = config.get('cloud.cloud_path', '/')
+        cloud_path = args.cloud_path if hasattr(args, 'cloud_path') and args.cloud_path else config.get('cloud.cloud_path', '/')
         local_path = config.get('sync.destination_path')
 
         logger.info(f"클라우드 동기화 시작: {cloud_path} -> {local_path}")
 
-        email = config.get('cloud.email')
-        if not email:
-            logger.error("로그인이 필요합니다. 'cloud-login' 명령을 먼저 실행하세요.")
-            return
-
+        # sncloud는 자동으로 토큰 사용
         cloud = SupernoteCloud()
         cloud.is_authenticated = True
 
@@ -238,6 +227,9 @@ def cmd_cloud_sync(config: Config, logger: Logger):
 
     except Exception as e:
         logger.error(f"클라우드 동기화 실패: {e}")
+        if hasattr(args, 'verbose') and args.verbose:
+            import traceback
+            traceback.print_exc()
 
 
 def cmd_cloud_info(config: Config, logger: Logger):
@@ -279,19 +271,19 @@ def main():
 
     # 명령 실행
     commands = {
-        'start': cmd_start,
-        'sync': cmd_sync,
-        'config': cmd_config,
-        'init': cmd_init,
-        'stats': cmd_stats,
-        'cloud-login': cmd_cloud_login,
-        'cloud-list': cmd_cloud_list,
-        'cloud-sync': cmd_cloud_sync,
-        'cloud-info': cmd_cloud_info,
+        'start': lambda: cmd_start(config, logger),
+        'sync': lambda: cmd_sync(config, logger),
+        'config': lambda: cmd_config(config, logger),
+        'init': lambda: cmd_init(config, logger),
+        'stats': lambda: cmd_stats(config, logger),
+        'cloud-login': lambda: cmd_cloud_login(config, logger),
+        'cloud-list': lambda: cmd_cloud_list(config, logger, args),
+        'cloud-sync': lambda: cmd_cloud_sync(config, logger, args),
+        'cloud-info': lambda: cmd_cloud_info(config, logger),
     }
 
     try:
-        commands[args.command](config, logger)
+        commands[args.command]()
     except KeyboardInterrupt:
         logger.info("\n프로그램이 중단되었습니다.")
         sys.exit(0)

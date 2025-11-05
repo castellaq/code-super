@@ -38,6 +38,13 @@ logs/
 
 # Config
 config.yaml
+.env
+*.key
+*.pem
+
+# Authentication tokens
+*token*.json
+credentials.json
 
 # OS
 .DS_Store

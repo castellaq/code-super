@@ -68,14 +68,21 @@ class SupernoteCloud:
             raise Exception(f"로그인 실패: {e}")
 
     def _save_credentials(self, email: str):
-        """인증 정보 저장"""
+        """
+        인증 정보 저장 (이메일과 로그인 시간만 저장)
+        실제 토큰은 sncloud가 ~/.config/sncloud/config.json에 자동 저장
+        """
         self.config_dir.mkdir(parents=True, exist_ok=True)
         credentials = {
             'email': email,
             'last_login': datetime.now().isoformat()
         }
-        with open(self.token_file, 'w', encoding='utf-8') as f:
-            json.dump(credentials, f, indent=2)
+        try:
+            with open(self.token_file, 'w', encoding='utf-8') as f:
+                json.dump(credentials, f, indent=2)
+        except Exception as e:
+            # 저장 실패해도 로그인은 성공한 것으로 처리 (sncloud가 토큰 관리)
+            print(f"경고: 로그인 정보 저장 실패 - {e}")
 
     def _load_credentials(self) -> Optional[Dict[str, Any]]:
         """저장된 인증 정보 로드"""
@@ -101,13 +108,13 @@ class SupernoteCloud:
         Returns:
             파일 및 폴더 목록
         """
-        if not self.is_authenticated:
-            raise Exception("로그인이 필요합니다.")
-
         try:
             files = self.client.ls(path)
-            return files
+            return files if files else []
         except Exception as e:
+            # 더 자세한 오류 메시지
+            if 'authentication' in str(e).lower() or 'login' in str(e).lower():
+                raise Exception("인증이 필요합니다. 'python main.py cloud-login' 명령을 먼저 실행하세요.")
             raise Exception(f"파일 목록 조회 실패: {e}")
 
     def download_file(
@@ -127,12 +134,11 @@ class SupernoteCloud:
         Returns:
             다운로드된 파일의 로컬 경로
         """
-        if not self.is_authenticated:
-            raise Exception("로그인이 필요합니다.")
-
         try:
             kwargs = {}
             if local_path:
+                # 디렉토리 생성
+                Path(local_path).parent.mkdir(parents=True, exist_ok=True)
                 kwargs['output'] = local_path
             if convert_format:
                 kwargs['format'] = convert_format
@@ -140,6 +146,8 @@ class SupernoteCloud:
             result = self.client.get(cloud_path, **kwargs)
             return result
         except Exception as e:
+            if 'authentication' in str(e).lower():
+                raise Exception("인증이 필요합니다. 'python main.py cloud-login' 명령을 먼저 실행하세요.")
             raise Exception(f"파일 다운로드 실패: {e}")
 
     def upload_file(self, local_path: str, cloud_parent: str = "/") -> bool:
